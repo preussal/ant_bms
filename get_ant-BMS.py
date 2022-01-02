@@ -107,25 +107,31 @@ Bal_St = [ "OFF",
 
 
 # Offset        Function                                            Type    Unit
+#  *2 - *2+2
 #######################################################################################################
 #  0 - 3        Frame Header		                                    0xAA 0x55
 #                                                                           0xAA 0xFF
 #######################################################################################################
 #  4 - 69       Voltage data                                                0.000 V
 #######################################################################################################
-#  70 - 73      Current	                                            int     0.0 A
+#  70 - 73      BMS Current                                         int     0.0 A
 #######################################################################################################
-#  74           Percentage of remaining battery	                    u8
+#  74           Percentage of remaining battery	(State of Carge)    u8
 #######################################################################################################
 #  75 - 78      Battery physical capacity                           u32     .000000 AH
 #######################################################################################################
 #  79 - 82      The remaining battery capacity                      u32     .000000 AH
 #######################################################################################################
-#  83 - 86      Total battery cycle capacity                        u32     .000AH
+#  83 - 86      Total battery cycle                                 u32     .000AH
 #######################################################################################################
 #  87 - 90      Accumulated from boot time seconds                  u32     S
 #######################################################################################################
-#  91 - 102     Actual temperature                                  short   degree
+#  92           Power Temperature                                   short   degree
+#  94           Balance Temperature                                 short   degree
+#  96           Cell 1 Temperature                                  short   degree
+#  98           Cell 2 Temperature                                  short   degree
+#  100          Cell 3 Temperature                                  short   degree
+#  102          Cell 4 Temperature                                  short   degree
 #######################################################################################################
 # 103           DCharge mos tube status flag                        u8      (after analysis)
 #######################################################################################################
@@ -257,7 +263,7 @@ def Serial_connect():
       sys.exit("Error: Open serial port: ") + str(msg)
 
 # GET BMS Data from Address
-def get_data(MBS_DATA, address1, address2, type=None):
+def get_data(BMS_DATA, address1, address2, type=None):
   data = codecs.decode(codecs.encode(BMS_DATA,'hex') [int(address1):int(address2)],'utf8')
   if '' == data:
     print ('Error: get invalid Data for '+ str(type)+' Address: '+'['+str(address1)+':'+str(address2)+']' )
@@ -298,6 +304,24 @@ def get_data(MBS_DATA, address1, address2, type=None):
       data = float((-(2*2147483648)+int(data,16)))
     else:
       data = float(int(data,16))
+
+  elif 'Battery physical Ah' == type:
+    if int(data,16)>2147483648:
+      data = float((-(2*2147483648)+int(data,16))*0.000001)
+    else:
+      data = float(int(data,16)*0.000001)
+
+  elif 'Battery Remaining Ah' == type:
+    if int(data,16)>2147483648:
+      data = float((-(2*2147483648)+int(data,16))*0.000001)
+    else:
+      data = float(int(data,16)*0.000001)
+
+  elif 'Total battery cycle Ah' == type:
+    if int(data,16)>2147483648:
+      data = float((-(2*2147483648)+int(data,16))*0.0001)
+    else:
+      data = float(int(data,16)*0.0001)
 
   else:
     data = int(data,16)
@@ -371,6 +395,30 @@ metrics[ 'BMS Current' ] = get_data(BMS_DATA, 140, 148, 'BMS Current')
 
 # State of Carge [148:150]
 metrics[ 'State of Carge' ] = int( get_data(BMS_DATA, 148, 150) )
+
+# Battery physical Ah [150:158]
+metrics[ 'Battery physical Ah' ] = get_data(BMS_DATA, 150, 158, 'Battery physical Ah')
+
+# Battery Remaining Ah [158:166]
+metrics[ 'Battery Remaining Ah' ] = get_data(BMS_DATA, 158, 166, 'Battery Remaining Ah')
+
+# Total battery cycle Ah [166:174]
+metrics[ 'Total battery cycle Ah' ] = get_data(BMS_DATA, 166, 174, 'Total battery cycle Ah')
+
+# Power temperature [184:186]
+metrics[ 'BMS Temperature' ] = get_data(BMS_DATA, 184, 186)
+
+# Balance temperature [188:190]
+metrics[ 'BMS Balance Temperature' ] = get_data(BMS_DATA, 188, 190)
+
+# Cell 1 temperature [192:194]
+metrics[ 'BMS Cell Sensor 1 Temperature' ] = get_data(BMS_DATA, 192, 194)
+
+# Cell 2 temperature [196:198]
+metrics[ 'BMS Cell Sensor 2 Temperature' ] = get_data(BMS_DATA, 196, 198)
+
+# Cell 3 temperature [200:202]
+#metrics[ 'BMS Cell Sensor 3 Temperature' ] = get_data(BMS_DATA, 200, 202)
 
 # MOSFET Status Charge [206:208]
 metrics[ 'Charge MOSFET Status' ] = MOSFET_Charge_St[ get_data(BMS_DATA, 206, 208) ]
