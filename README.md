@@ -18,3 +18,25 @@ The get_ant-BMS.py outputs some data as debug info in the console, and also logs
 ######
 everyone who wants to play around with it is very welcome.
 When I find the time again, I will also make the temporary solution better. 
+
+
+Example Output
+{'BMS Balance Temperature': 33,
+ 'BMS Cell Sensor 1 Temperature': 32,
+ 'BMS Cell Sensor 2 Temperature': 31,
+ 'BMS Current': 0.0,
+ 'BMS Temperature': 32,
+ 'BMS Voltage': 52.9,
+ 'Balancing Status': 'OFF',
+ 'Battery Remaining Ah': 277.518761,
+ 'Battery physical Ah': 0.0,
+ 'Cell Avg Voltage': 3.304,
+ 'Cell Diff Voltage': 0.009000000000000341,
+ 'Cell Max Voltage': 3.309,
+ 'Cell Min Voltage': 3.3,
+ 'Charge MOSFET Status': 'ON',
+ 'Discharge MOSFET Status': 'ON',
+ 'Power Watt': 0.0,
+ 'State of Carge': 100,
+ 'Total battery cycle Ah': 0.0}
+
