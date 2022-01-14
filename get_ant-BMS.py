@@ -49,7 +49,9 @@ BAUDRATE = 9600
 BMS_CELLS=16
 
 # Datasize to get from the BMS (default 140) Byte
-size = 256
+LENGTH_CHECK = -1
+LENGTH_POS = 139
+LENGTH_FIXED = 140
 
 #######################################################
 # MOSFET Status Charge [206:208]
@@ -179,7 +181,6 @@ Bal_St = [ "OFF",
 #               5 - 9: Battery number
 #               10 - 14: Sequential order
 #               15: Charge and discharge (1 discharge, 0 charge)    u16
-# 136 - 137	System logs
 #######################################################################################################
 # 138 - 139	Sum check	                                    2 bytes
 #######################################################################################################
@@ -220,7 +221,7 @@ def BT_connect():
     sys.exit("Error: send data: ") + str(msg)
   else:
     time.sleep(2)           # Sleep 2 Sec after Write request
-    BMS_DATA = s.recv(size) # Get BMS Data
+    BMS_DATA = s.recv(LENGTH_FIXED) # Get BMS Data
     s.close()
     return (BMS_DATA)
 
@@ -249,8 +250,7 @@ def Serial_connect():
 
       ser.write(codecs.decode('DBDB00000000','hex'))
       time.sleep(2)             # Sleep 2 Sec after Write request
-
-      BMS_DATA = ser.read(size) # Get BMS Data
+      BMS_DATA = ser.read(LENGTH_FIXED) # Get BMS Data
 #      print ('BMS DATA')
 #      print (BMS_DATA)
       ser.close()
@@ -262,8 +262,10 @@ def Serial_connect():
     except Exception as msg:
       sys.exit("Error: Open serial port: ") + str(msg)
 
+
 # GET BMS Data from Address
 def get_data(BMS_DATA, address1, address2, type=None):
+
   data = codecs.decode(codecs.encode(BMS_DATA,'hex') [int(address1):int(address2)],'utf8')
   if '' == data:
     print ('Error: get invalid Data for '+ str(type)+' Address: '+'['+str(address1)+':'+str(address2)+']' )
@@ -319,9 +321,9 @@ def get_data(BMS_DATA, address1, address2, type=None):
 
   elif 'Total battery cycle Ah' == type:
     if int(data,16)>2147483648:
-      data = float((-(2*2147483648)+int(data,16))*0.0001)
+      data = float((-(2*2147483648)+int(data,16))*0.001)
     else:
-      data = float(int(data,16)*0.0001)
+      data = float(int(data,16)*0.001)
 
   else:
     data = int(data,16)
